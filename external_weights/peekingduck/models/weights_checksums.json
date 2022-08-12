@@ -1,0 +1,109 @@
+{
+  "csrnet": {
+    "tensorflow": {
+      "sparse": "c115a2d47f0240b031e9084ad649d9bb193de24e1dd08952f49a8f128e95aa2d",
+      "dense": "a3dd307dbfa79fa9a3417b59b54af6ddd9cf2f8871336d9da14de7cdcf969a3d"
+    }
+  },
+  "efficientdet": {
+    "tensorflow": {
+      "0": "a25d4ba13ecb408e4a5b1c036d78fa22f425f9719f70976ad3764f481a332e48",
+      "1": "e8957735f4d56d3a515447859192b782efc23cb3de0e82104ccafb42300948da",
+      "2": "a86fc8c7b75843a56eb7a4745b6b86a333bafdf426609c7406dd443ee93108bf",
+      "3": "1f40c8209bda0a385d31a8efdd72d38917ed30c60db7a367880f4f29d5ef1432",
+      "4": "a75924bc781a338dbdeecfab778926f6ebce1416a14d95ff8346a76c197629a7"
+    }
+  },
+  "fairmot": {
+    "pytorch": {
+      "dla_34": "19c2b9fdfc66b484165b6e1a36e893447ca20dddf642eb3c681c8bd43fd5fcaf"
+    }
+  },
+  "hrnet": {
+    "tensorflow": {
+      "default": "c807530e48a88288171c2a3966f7aa0b96fe7c4620de0005f90d288733d16cc7"
+    }
+  },
+  "jde": {
+    "pytorch": {
+      "864x480": "2954e5b965c15c9decaa7547ca8e84f0e9901795cd641ed1c802bd4f3ca91a4d"
+    }
+  },
+  "mask_rcnn": {
+    "pytorch": {
+      "r50-fpn": "7bfae9a6e959bb8ffd8e0cb08e94793cc7810f6e35b70ff7d49cfd4754aa7fe1",
+      "r101-fpn": "96d1d9d0aa9d3a7253e5043c1d3d3be74daf1a754610bc55e383e06bc9791e45"
+    }
+  },
+  "movenet": {
+    "tensorflow": {
+      "multipose_lightning": "6f53a2840582e7d5edab16e431fb8cfe4e661bdcbc9441193612c3daa7c130ce",
+      "singlepose_lightning": "717d71140e078d203fd559789f6ad4be29a2322b80a4af7cc8cd8ffc220c0e8c",
+      "singlepose_thunder": "6ecaf86e2e8268f7e19fa412defe739676fbb442c2081202f7b13973ab0479aa"
+    },
+    "tensorrt": {
+      "multipose_lightning": "5b4f2d29c775773b401edf492ffc0ec977bd287ec57203122e1025a91b7175b",
+      "singlepose_lightning": "f9c11ab73611633e16d09626ebd4d445a9aa2b5d0e58bd9b21ce7d073dbcceb9",
+      "singlepose_thunder": "632b1d1271ea2575a4af76f9f0b01d14f112b4206318214b946a9a2a60d26da4"
+    }
+  },
+  "mtcnn": {
+    "tensorflow": {
+      "default": "f40d41e1d4d3aea5767078c1b1fc0666e354835b3956ffb6fcc835c981e58fb2"
+    }
+  },
+  "posenet": {
+    "tensorflow": {
+      "resnet": "10ef18761a2c48b8f2462e476fa8a3c11d1e2b3b24539f435ba15f989ce105fe",
+      "50": "c52df81d23c44e7dc5f2beed317ef4748b75a371e8a5e680bd56a09ce9a20fd3",
+      "75": "4ed7b16e9ca616ac96a982730b291ee5765af798a8f16c7f394be7541e046f0b",
+      "100": "de6f3cd72ee1e6351923d80148926bd9001ac03b347cc986f08d78f08e96845b"
+    }
+  },
+  "yolact_edge": {
+    "pytorch": {
+      "r50-fpn": "c12bb7a7e0343281db7f1407b376970bb52651f121d0b60bc4a49207acb6d6d7",
+      "r101-fpn": "6ffc8a3f4257d800e6a3973b0f8c1e9ba9d50dc336a8ec9fbca305b64ca033d9",
+      "mobilenetv2": "d1b32a84fcdc8748b8c869c079226adc82686413d0bb6d2d4c2e9a8c32454808"
+    }
+  },
+  "yolo_face": {
+    "tensorflow": {
+      "v4": "03c5c83c41a0afb496c7a52a811d05fc81c6e711f459e20f8ebe38e2aac06b3d",
+      "v4tiny": "e645b55c0e5bddc5898482e6ce3f46fc56f9b00f44d5bf9dadb295c0a3e9cb0e"
+    }
+  },
+  "yolo_license_plate": {
+    "tensorflow": {
+      "v4": "a8903b3d6d190ca209a3f8f97db4dfb33a83df4c77a81fc0263c5b5a2b6b2688",
+      "v4tiny": "b10993061ff200805e0c0585a1a92b0b52c9f9dc82d09e6fb116275a35d920ec"
+    }
+  },
+  "yolo": {
+    "tensorflow": {
+      "v4": "ea87d0bcdb7301f855043dff86c91d040acef72da04c1cd13bb62fe412d11911",
+      "v4tiny": "a5b16c2c75f0b624dc80fd025fd118f92456f779292765b17d0e5f2b61f163e1"
+    }
+  },
+  "yolox": {
+    "pytorch": {
+      "yolox-tiny": "c15dc8e6a70ce11dbecf38a8dc2e45ef8a2f8ee2162a2b215ce63b25d8c925e2",
+      "yolox-s": "0da841b2c7e1b6062d413f74a44f954699bcc8783cbf4ab9b4741b90e7500da0",
+      "yolox-m": "cd4831d730e88630bb45cf8e1e32031ffb806b03bdcd295d92c3182d2decc53f",
+      "yolox-l": "c07ec82c24df7f5528aa944a471c13465b59e280f13939ebc4731198850ac536"
+    },
+    "tensorrt": {
+      "yolox-tiny": "d526ec4030433b0bc4a5815a0a5bf00adc8d70c110a521494a2f6c399195cf40",
+      "yolox-s": "01add994af5f225086e6bfcaa6d886c8a3f25069d2278e69332faa9649110204",
+      "yolox-m": "d549f97567b0c8d41357dc269be15d0976d5070b838f1aa1585049385425e97d",
+      "yolox-l": "567cab586b0d3892392fcd7991992b54e331fece97cc77476af19a9b01d11132"
+    }
+  },
+  "yolov6": {
+    "pytorch": {
+      "yolov6n": "47dc8840737bf4dbf6b6650e0da2386d25224b872975ce50cb505681c247f291",
+      "yolov6s": "b944839dcedc98fd08788cf3a80904128005785db441b42ea7d7f07799db8a90",
+      "yolov6t": "5f2186c6680e7990a3dabf5f95b2e26a444dc1085ad82a38330624017cf89342"
+    }
+  }
+}

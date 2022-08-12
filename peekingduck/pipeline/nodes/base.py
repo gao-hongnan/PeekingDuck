@@ -12,7 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Mixin classes for PeekingDuck nodes and models."""
+"""Mixin classes for PeekingDuck nodes and models.
+
+1. Put YOLOv6's weights into the same directory as PeekingDuck, I named the directory
+`external_weights`;
+
+2. Define `LOCAL_URL` with "file://" as prefix; e.g. "file:///home/user/weights/yolov6.weights"
+
+3. Used `print(self.sha256sum(weights_path).hexdigest())` to get the weight's checksum;
+but I soon realized there is a script
+in `scripts/converters/compute_weights_checksum.py` to do so.
+
+4. Remember to get the `weights_checksums.json` file from https://storage.googleapis.com/
+peekingduck/models/weights_checksums.json
+and update it with the latest addition (i.e. YOLOv6n weights checksum); this should also be
+placed in the `external_weights` directory.
+
+5. Modify `WeightsDownloaderMixin` accordingly to check if config has local url flag:
+
+    - `is_local_url` checks if the url in weights config is local;
+    - `get_base_url_and_request_session` returns the base url and request session
+    depending on the local url flag.
+    - The output of `get_base_url_and_request_session` is used in `download_to` and
+    `get_weights_checksum`.
+    - Potential improvements: the outputs of `get_base_url_and_request_session` are duplicated
+    in both `download_to` and `get_weights_checksum`; they share the same session;
+
+6. Global Variables: consider having global vars in a global config class.
+"""
 
 import hashlib
 import operator
@@ -21,13 +48,73 @@ import re
 import sys
 import zipfile
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Union, no_type_check, Tuple
+from urllib.request import url2pathname
 
 import requests
 from tqdm import tqdm
 
+
 BASE_URL = "https://storage.googleapis.com/peekingduck/models"
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.absolute()
+LOCAL_URL = Path.joinpath(BASE_DIR, "external_weights/peekingduck/models").as_uri()
+
 PEEKINGDUCK_WEIGHTS_SUBDIR = "peekingduck_weights"
+
+
+class LocalFileAdapter(requests.adapters.BaseAdapter):
+    """Protocol Adapter to allow Requests to GET file:// URLs
+
+    @todo: Properly handle non-empty hostname portions.
+    """
+
+    @no_type_check
+    @staticmethod
+    def _chkpath(method, path):
+        """Return an HTTP status for the given filesystem path."""
+        if method.lower() in ("put", "delete"):
+            return 501, "Not Implemented"
+        if method.lower() not in ("get", "head"):
+            return 405, "Method Not Allowed"
+        if os.path.isdir(path):
+            return 400, "Path Not A File"
+        if not os.path.isfile(path):
+            return 404, "File Not Found"
+        if not os.access(path, os.R_OK):
+            return 403, "Access Denied"
+        return 200, "OK"
+
+    @no_type_check
+    def send(self, req, **kwargs):  # pylint: disable=unused-argument, arguments-differ
+        """Return the file specified by the given request
+
+        @type req: C{PreparedRequest}
+        @todo: Should I bother filling `response.headers` and processing
+               If-Modified-Since and friends using `os.stat`?
+        """
+        path = os.path.normcase(os.path.normpath(url2pathname(req.path_url)))
+        response = requests.Response()
+
+        response.status_code, response.reason = self._chkpath(req.method, path)
+        if response.status_code == 200 and req.method.lower() != "head":
+            try:
+                response.raw = open(path, "rb")
+            except (OSError, IOError) as err:
+                response.status_code = 500
+                response.reason = str(err)
+
+        if isinstance(req.url, bytes):
+            response.url = req.url.decode("utf-8")
+        else:
+            response.url = req.url
+
+        response.request = req
+        response.connection = self
+
+        return response
+
+    def close(self) -> None:
+        pass
 
 
 class ThresholdCheckerMixin:
@@ -195,6 +282,26 @@ class WeightsDownloaderMixin:
     """Mixin class providing utility methods for downloading model weights."""
 
     @property
+    def is_local_url(self) -> Optional[Any]:
+        """Whether the weights are located in a local folder."""
+        return self.weights.get("is_local_url")
+
+    def get_base_url_and_request_session(self) -> Tuple[str, requests.Session]:
+        """Returns a requests session."""
+
+        if self.is_local_url:
+            base_url = LOCAL_URL
+            requests_session = requests.session()
+            requests_session.mount("file://", LocalFileAdapter())
+        else:
+            base_url = BASE_URL
+            # https://stackoverflow.com/questions/32986228/difference-between-using
+            # -requests-get-and-requests-session-get#:~:text=get()%20creates%20a%20new
+            # ,as%20headers%20and%20query%20parameters.
+            requests_session = requests.session()
+        return base_url, requests_session
+
+    @property
     def blob_filename(self) -> str:
         """Name of the selected weights on GCP."""
         return self.weights["blob_file"][self.config["model_type"]]
@@ -256,8 +363,11 @@ class WeightsDownloaderMixin:
         Args:
             destination_dir (Path): Destination directory of downloaded file.
         """
-        with open(destination_dir / filename, "wb") as outfile, requests.get(
-            f"{BASE_URL}/{self.model_subdir}/{self.config['model_format']}/{filename}",
+
+        base_url, requests_session = self.get_base_url_and_request_session()
+
+        with open(destination_dir / filename, "wb") as outfile, requests_session.get(
+            f"{base_url}/{self.model_subdir}/{self.config['model_format']}/{filename}",
             stream=True,
         ) as response:
             for chunk in tqdm(response.iter_content(chunk_size=32768)):
@@ -271,6 +381,7 @@ class WeightsDownloaderMixin:
             destination_dir (Path): Destination directory for extraction.
         """
         zip_path = destination_dir / self.blob_filename
+        print(zip_path)
         with zipfile.ZipFile(zip_path, "r") as infile:
             file_list = infile.namelist()
             for file in tqdm(file=sys.stdout, iterable=file_list, total=len(file_list)):
@@ -314,7 +425,10 @@ class WeightsDownloaderMixin:
         )
 
     def _get_weights_checksum(self) -> str:
-        with requests.get(f"{BASE_URL}/weights_checksums.json") as response:
+        """Returns the checksum of the weights file."""
+        # consider do not call base_url and request session twice? attribute/property?
+        base_url, requests_session = self.get_base_url_and_request_session()
+        with requests_session.get(f"{base_url}/weights_checksums.json") as response:
             checksums = response.json()
         self.logger.debug(f"weights_checksums: {checksums[self.model_subdir]}")
         return checksums[self.model_subdir][self.config["model_format"]][
@@ -337,6 +451,7 @@ class WeightsDownloaderMixin:
         if not weights_path.exists():
             self.logger.warning("No weights detected.")
             return False
+
         if self.sha256sum(weights_path).hexdigest() != self._get_weights_checksum():
             self.logger.warning("Weights file is corrupted/out-of-date.")
             return False

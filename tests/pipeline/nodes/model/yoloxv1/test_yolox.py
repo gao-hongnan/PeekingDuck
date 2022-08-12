@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=all
+
 from pathlib import Path
 from unittest import mock
 
@@ -27,6 +29,9 @@ from peekingduck.pipeline.nodes.model.yolox import Node
 from tests.conftest import PKD_DIR, get_groundtruth
 
 GT_RESULTS = get_groundtruth(Path(__file__).resolve())
+
+
+# print(GT_RESULTS)
 
 
 @pytest.fixture
@@ -78,6 +83,7 @@ def yolox_config_cpu(request, yolox_matrix_config):
 @pytest.mark.mlmodel
 class TestYOLOX:
     def test_no_human_image(self, no_human_image, yolox_config_cpu):
+        print(no_human_image)
         no_human_img = cv2.imread(no_human_image)
         yolox = Node(yolox_config_cpu)
         output = yolox.run({"img": no_human_img})

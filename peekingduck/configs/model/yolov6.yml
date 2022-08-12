@@ -1,0 +1,39 @@
+input: ["img"]
+output: ["bboxes", "bbox_labels", "bbox_scores"]
+
+weights_parent_dir: null
+weights:
+  {
+    pytorch:
+      {
+        model_subdir: yolov6,
+        blob_file:
+          {
+            yolov6n: new_yolov6n.zip,
+            yolov6s: new_yolov6s.zip,
+            yolov6t: new_yolov6t.zip,
+          },
+        classes_file: coco.names,
+        model_file:
+          {
+            yolov6n: new_yolov6n.pt,
+            yolov6s: new_yolov6s.pt,
+            yolov6t: new_yolov6t.pt,
+          },
+        is_local_url: true,
+      },
+  }
+
+num_classes: 80
+
+model_format: pytorch
+model_type: yolov6n # yolox-tiny, yolox-s, yolox-m, or yolox-l
+input_size: 640
+detect: [0]
+iou_threshold: 0.45
+score_threshold: 0.25
+agnostic_nms: true
+half: false
+fuse: true
+multi_label: true
+max_detections: 300
