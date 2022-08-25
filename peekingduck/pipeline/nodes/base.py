@@ -46,7 +46,6 @@ import operator
 import os
 import re
 import sys
-from syslog import LOG_ALERT
 import zipfile
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Union, no_type_check, Tuple

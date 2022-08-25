@@ -20,14 +20,6 @@ from typing import Any, Dict, Union, Type
 class RecursiveNamespace:  # without extending SimpleNamespace!
     """Extend SimpleNamespace to allow recursive instantiation."""
 
-    # https://dev.to/taqkarim/extending-simplenamespace-for-nested-dictionaries-58e8
-    @staticmethod
-    def map_entry(entry: Any) -> Union[Any, Type["RecursiveNamespace"]]:
-        """Map entry to RecursiveNamespace if necessary."""
-        if isinstance(entry, dict):
-            return RecursiveNamespace(**entry)
-        return entry
-
     def __init__(self, **kwargs: Dict[str, Any]):  # type: ignore
         for key, val in kwargs.items():
             if isinstance(val, dict):
@@ -36,6 +28,14 @@ class RecursiveNamespace:  # without extending SimpleNamespace!
                 setattr(self, key, list(map(self.map_entry, val)))
             else:  # this is the only addition
                 setattr(self, key, val)
+
+    # https://dev.to/taqkarim/extending-simplenamespace-for-nested-dictionaries-58e8
+    @staticmethod
+    def map_entry(entry: Any) -> Union[Any, Type["RecursiveNamespace"]]:
+        """Map entry to RecursiveNamespace if necessary."""
+        if isinstance(entry, dict):
+            return RecursiveNamespace(**entry)
+        return entry
 
 
 @dataclass(init=True, frozen=False)

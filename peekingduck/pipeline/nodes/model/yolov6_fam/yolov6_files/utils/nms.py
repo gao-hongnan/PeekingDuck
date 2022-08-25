@@ -19,7 +19,6 @@
 https://stackoverflow.com/questions/55266154/pytorch-preferred-way-to-copy-a-tensor
 """
 
-import os
 import time
 from typing import List
 
@@ -38,8 +37,6 @@ np.set_printoptions(linewidth=320, formatter={"float_kind": "{:11.5g}".format})
 # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
 cv2.setNumThreads(0)  # add this to whitelist
 
-# NumExpr max threads
-os.environ["NUMEXPR_MAX_THREADS"] = str(min(os.cpu_count(), 8))  # type: ignore
 
 # # TODO: to use my own repo's central config way to call configs.
 # @dataclass(init=True, frozen=True)
@@ -49,7 +46,7 @@ os.environ["NUMEXPR_MAX_THREADS"] = str(min(os.cpu_count(), 8))  # type: ignore
 #     max_wh = 4096  # maximum box width and height
 #     max_nms = 30000  # maximum number of boxes put into torchvision.ops.nms()
 #     time_limit = 10.0  # quit the function when nms cost time exceed the limit time.
-#     conf_thres: float
+#     score_threshold: float
 #     iou_thres: float
 #     detect: List[int]
 #     agnostic: bool
@@ -60,7 +57,7 @@ os.environ["NUMEXPR_MAX_THREADS"] = str(min(os.cpu_count(), 8))  # type: ignore
 # pylint: disable=too-many-arguments, too-many-locals
 def non_max_suppression(
     predictions: torch.Tensor,
-    conf_thres: float = 0.25,
+    score_threshold: float = 0.25,
     iou_thres: float = 0.45,
     classes: torch.Tensor = None,
     agnostic: bool = False,
@@ -72,10 +69,10 @@ def non_max_suppression(
     47233e1698b89fc437a4fb9463c815e9171be955/utils/general.py#L775
 
     Args:
-        predictions: (tensor), with shape [N, 5 + num_classes], N is the number of bboxes.
-        conf_thres: (float) confidence threshold.
+        predictions: (torch.Tensor), with shape [N, 5 + num_classes], N is the number of bboxes.
+        score_threshold: (float) confidence threshold.
         iou_thres: (float) iou threshold.
-        classes: (None or list[int]), if a list is provided, nms only keep the classes you
+        classes: (torch.Tensor), if a list is provided, nms only keep the classes you
          provide.
         agnostic: (bool), when it is set to True, we do class-independent nms, otherwise,
          different class would do nms respectively.
@@ -84,17 +81,17 @@ def non_max_suppression(
         max_det:(int), max number of output bboxes.
 
     Returns:
-         list of detections, echo item is one tensor with shape (num_boxes, 6), 6
-         is for [xyxy, conf, cls].
+        output (List[torch.Tensor]): list of detections, echo item is one tensor
+                with shape (num_boxes, 6), 6 is for [xyxy, conf, cls].
     """
 
     num_classes = predictions.shape[2] - 5  # number of classes
-    pred_candidates = predictions[..., 4] > conf_thres  # candidates
+    pred_candidates = predictions[..., 4] > score_threshold  # candidates
 
     # Check the parameters.
     assert (
-        0 <= conf_thres <= 1
-    ), f"conf_thresh must be in 0.0 to 1.0, however {conf_thres} is provided."
+        0 <= score_threshold <= 1
+    ), f"score_thresholdh must be in 0.0 to 1.0, however {score_threshold} is provided."
     assert (
         0 <= iou_thres <= 1
     ), f"iou_thres must be in 0.0 to 1.0, however {iou_thres} is provided."
@@ -123,7 +120,7 @@ def non_max_suppression(
         # Detections matrix's shape is  (n,6), each row represents (xyxy, conf, cls)
         if multi_label:
             box_idx, class_idx = (
-                (prediction[:, 5:] > conf_thres).nonzero(as_tuple=False).T
+                (prediction[:, 5:] > score_threshold).nonzero(as_tuple=False).T
             )
             prediction = torch.cat(
                 (
@@ -136,7 +133,7 @@ def non_max_suppression(
         else:  # Only keep the class with highest scores.
             conf, class_idx = prediction[:, 5:].max(1, keepdim=True)
             prediction = torch.cat((box, conf, class_idx.float()), 1)[
-                conf.view(-1) > conf_thres
+                conf.view(-1) > score_threshold
             ]
 
         # Filter by class, only keep boxes whose category is in classes.

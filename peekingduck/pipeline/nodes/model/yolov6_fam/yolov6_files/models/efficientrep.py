@@ -1,10 +1,24 @@
-# Copyright 2022 AI Singapore
+# Modifications copyright 2022 AI Singapore
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Original copyright 2021 Megvii, Base Detection
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +42,6 @@ from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.layers.common impo
 )
 
 
-# pylint: disable=invalid-name
 # changing name will cause weights name mismatch.
 class EfficientRep(nn.Module):
     """EfficientRep Backbone
@@ -56,6 +69,7 @@ class EfficientRep(nn.Module):
             stride=2,
         )
 
+        # pylint: disable=invalid-name
         self.ERBlock_2 = nn.Sequential(
             block(
                 in_channels=channels_list[0],
@@ -131,7 +145,6 @@ class EfficientRep(nn.Module):
             Tuple[torch.Tensor]: A tuple of tensors combining [stem+ERBlock_2+ERBlock_3,
                 ERBlock_4, ERBlock_5].
         """
-
         outputs = []
 
         inputs = self.stem(inputs)
@@ -143,7 +156,6 @@ class EfficientRep(nn.Module):
         outputs.append(inputs)
 
         inputs = self.ERBlock_5(inputs)
-
         outputs.append(inputs)
 
         return tuple(outputs)

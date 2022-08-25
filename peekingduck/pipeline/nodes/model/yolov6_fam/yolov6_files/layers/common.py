@@ -30,8 +30,8 @@ import numpy as np
 import torch
 from torch import nn
 
-Branch = Union[nn.Sequential, nn.BatchNorm2d, None]
-# pylint: disable=invalid-name, too-many-locals, too-many-instance-attributes, too-many-arguments
+
+# pylint: disable=too-many-arguments
 def conv_bn(
     in_channels: int,
     out_channels: int,
@@ -58,6 +58,7 @@ def conv_bn(
     return result
 
 
+# pylint: disable=invalid-name
 class Conv(nn.Module):
     """Normal Conv with SiLU activation"""
 
@@ -145,6 +146,7 @@ class SimConv(nn.Module):
         return self.act(self.conv(inputs))
 
 
+# pylint: disable=invalid-name
 class SimSPPF(nn.Module):
     """Simplified SPPF with ReLU activation"""
 
@@ -152,9 +154,9 @@ class SimSPPF(nn.Module):
         self, in_channels: int, out_channels: int, kernel_size: int = 5
     ) -> None:
         super().__init__()
-        c_ = in_channels // 2  # hidden channels
-        self.cv1 = SimConv(in_channels, c_, 1, 1)
-        self.cv2 = SimConv(c_ * 4, out_channels, 1, 1)
+        hidden_channels = in_channels // 2  # hidden channels
+        self.cv1 = SimConv(in_channels, hidden_channels, 1, 1)
+        self.cv2 = SimConv(hidden_channels * 4, out_channels, 1, 1)
         self.m = nn.MaxPool2d(
             kernel_size=kernel_size, stride=1, padding=kernel_size // 2
         )
@@ -168,9 +170,13 @@ class SimSPPF(nn.Module):
         inputs = self.cv1(inputs)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            y1 = self.m(inputs)
-            y2 = self.m(y1)
-            return self.cv2(torch.cat([inputs, y1, y2, self.m(y2)], 1))
+            maxpool_out_1 = self.m(inputs)
+            maxpool_out_2 = self.m(maxpool_out_1)
+            return self.cv2(
+                torch.cat(
+                    [inputs, maxpool_out_1, maxpool_out_2, self.m(maxpool_out_2)], 1
+                )
+            )
 
 
 class Transpose(nn.Module):
@@ -197,6 +203,7 @@ class Transpose(nn.Module):
         return self.upsample_transpose(inputs)
 
 
+# pylint: disable=too-many-instance-attributes
 class RepVGGBlock(nn.Module):
     """RepVGGBlock is a basic rep-style block, including training and deploy status
     This code is based on https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py
@@ -213,9 +220,7 @@ class RepVGGBlock(nn.Module):
         groups: int = 1,
         padding_mode: str = "zeros",
         deploy: bool = False,
-        use_se: bool = False,
     ) -> None:
-
         """Initialization of the class.
         Args:
             in_channels (int): Number of channels in the inputs image
@@ -229,7 +234,6 @@ class RepVGGBlock(nn.Module):
                 channels to output channels. Default: 1
             padding_mode (string, optional): Default: 'zeros'
             deploy: Whether to be deploy status or training status. Default: False
-            use_se: Whether to use se. Default: False
         """
 
         super().__init__()
@@ -244,9 +248,6 @@ class RepVGGBlock(nn.Module):
         padding_11 = padding - kernel_size // 2
 
         self.nonlinearity = nn.ReLU()
-
-        if use_se:
-            raise NotImplementedError("se block not supported yet")
 
         # FIXME: se is identity func
         self.se = nn.Identity()
@@ -263,7 +264,6 @@ class RepVGGBlock(nn.Module):
                 bias=True,
                 padding_mode=padding_mode,
             )
-
         else:
             self.rbr_identity = (
                 nn.BatchNorm2d(num_features=in_channels)
@@ -271,12 +271,7 @@ class RepVGGBlock(nn.Module):
                 else None
             )
             self.rbr_dense = conv_bn(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                kernel_size=kernel_size,
-                stride=stride,
-                padding=padding,
-                groups=groups,
+                in_channels, out_channels, kernel_size, stride, padding, groups
             )
             self.rbr_1x1 = conv_bn(
                 in_channels=in_channels,
@@ -311,7 +306,7 @@ class RepVGGBlock(nn.Module):
         """Get equivalent kernel and bias for the block during deploy mode.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor]: kernel and bias.
+            Tuple[Union[torch.Tensor, int], Union[torch.Tensor, int]]: kernel and bias.
         """
         kernel3x3, bias3x3 = self._fuse_bn_tensor(self.rbr_dense)
         kernel1x1, bias1x1 = self._fuse_bn_tensor(self.rbr_1x1)
@@ -331,9 +326,8 @@ class RepVGGBlock(nn.Module):
             kernel1x1 (torch.Tensor): The 1x1 kernel.
 
         Returns:
-            torch.Tensor: The 3x3 kernel.
+            Union[torch.Tensor, int]: The 3x3 kernel.
         """
-
         if kernel1x1 is None:
             return 0
 
@@ -342,18 +336,18 @@ class RepVGGBlock(nn.Module):
 
     @no_type_check
     def _fuse_bn_tensor(
-        self, branch: Branch
-    ) -> Tuple[Union[torch.Tensor, int], Union[torch.Tensor, int]]:
+        self, branch: Union[nn.Sequential, nn.BatchNorm2d, None]
+    ) -> Union[Tuple[int, int], Tuple[torch.Tensor, torch.Tensor]]:
         """Fuse the batch norm tensor.
 
         Args:
-            branch (Branch): A branch type of the block: nn.Sequential or nn.BatchNorm2d.
+            branch (Union[nn.Sequential, nn.BatchNorm2d, None]):
+                A branch type of the block: nn.Sequential or nn.BatchNorm2d.
 
         Returns:
-            Tuple[Union[torch.Tensor, int], Union[torch.Tensor, int]]: Returns 0
-            if branch is None.
+            Union[Tuple[int, int], Tuple[torch.Tensor, torch.Tensor]]: Returns
+            (0, 0) if branch is None, otherwise returns the fused kernel and bias.
         """
-
         if branch is None:
             return 0, 0
         if isinstance(branch, nn.Sequential):
@@ -444,17 +438,3 @@ class RepBlock(nn.Module):
         if self.block is not None:
             outputs = self.block(outputs)
         return outputs
-
-
-def get_block(mode: str) -> type[RepVGGBlock]:
-    """Get the block for the given mode.
-
-    Args:
-        mode (str): The mode of the block.
-
-    Raises:
-        NotImplementedError: Undefined block.
-    """
-    if mode == "repvgg":
-        return RepVGGBlock
-    raise NotImplementedError(f"Undefined Repblock choice for mode {mode}")

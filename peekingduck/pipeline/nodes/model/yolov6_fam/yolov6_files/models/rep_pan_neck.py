@@ -28,7 +28,7 @@ from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.layers.common impo
     RepVGGBlock,
 )
 
-# pylint: disable=invalid-name, too-many-locals. too-many-instance-attributes
+
 # changing name will cause weights name mismatch.
 class RepPANNeck(nn.Module):
     """RepPANNeck Module
@@ -36,6 +36,7 @@ class RepPANNeck(nn.Module):
     RepPANNeck has the balance of feature fusion ability and hardware efficiency.
     """
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         channels_list: Optional[List[int]] = None,
@@ -47,6 +48,7 @@ class RepPANNeck(nn.Module):
         assert channels_list is not None
         assert num_repeats is not None
 
+        # pylint: disable=invalid-name
         self.Rep_p4 = RepBlock(
             in_channels=channels_list[3] + channels_list[5],
             out_channels=channels_list[5],
@@ -112,6 +114,7 @@ class RepPANNeck(nn.Module):
             stride=2,
         )
 
+    # pylint: disable=too-many-locals
     def forward(self, inputs: Tuple[torch.Tensor, ...]) -> List[torch.Tensor]:
         """Forward pass of RepPANNeck, the neck of YOLOv6.
 
@@ -124,16 +127,16 @@ class RepPANNeck(nn.Module):
             network.
         """
 
-        (x2, x1, x0) = inputs
+        (x_2, x_1, x_0) = inputs
 
-        fpn_out0 = self.reduce_layer0(x0)
+        fpn_out0 = self.reduce_layer0(x_0)
         upsample_feat0 = self.upsample0(fpn_out0)
-        f_concat_layer0 = torch.cat([upsample_feat0, x1], 1)
+        f_concat_layer0 = torch.cat([upsample_feat0, x_1], 1)
         f_out0 = self.Rep_p4(f_concat_layer0)
 
         fpn_out1 = self.reduce_layer1(f_out0)
         upsample_feat1 = self.upsample1(fpn_out1)
-        f_concat_layer1 = torch.cat([upsample_feat1, x2], 1)
+        f_concat_layer1 = torch.cat([upsample_feat1, x_2], 1)
         pan_out2 = self.Rep_p3(f_concat_layer1)
 
         down_feat1 = self.downsample2(pan_out2)

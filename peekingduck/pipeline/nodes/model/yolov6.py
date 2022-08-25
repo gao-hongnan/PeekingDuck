@@ -36,7 +36,7 @@ class Node(AbstractNode):  # pylint: disable=too-few-public-methods
         |bbox_scores_data|
 
     Configs:
-        model_type (:obj:`str`): **{"yolov6n", "yolov6s}, default="yolov6n"**. |br|
+        model_type (:obj:`str`): **{"yolov6n", "yolov6t}, default="yolov6n"**. |br|
             Defines the type of YOLOv6 model to be used.
         weights_parent_dir (:obj:`Optional[str]`): **default = null**. |br|
             Change the parent directory where weights will be stored by

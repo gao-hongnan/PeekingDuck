@@ -30,27 +30,30 @@ from torch import nn
 from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.configs.config import (
     ModelParams,
 )
-from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.layers.common import (
-    get_block,
-)
 from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.models.efficientrep import (
     EfficientRep,
 )
-from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.models.effidehead import (
-    Detect,
-    build_effidehead_layer,
+
+# pylint: disable=line-too-long
+from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.models.efficient_decoupled_head import (
+    EfficientDecoupledHead,
+    build_efficient_decoupled_head,
 )
-from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.models.reppan import (
+from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.models.rep_pan_neck import (
     RepPANNeck,
 )
+from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.layers.common import (
+    RepVGGBlock,
+)
 
-# pylint: disable=too-many-instance-attributes
+
 class YOLOv6(nn.Module):
     """YOLOv6 model with backbone, neck and head.
     The default parts are EfficientRep Backbone, Rep-PAN and
     Efficient Decoupled Head.
     """
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         config: type[ModelParams],
@@ -69,7 +72,7 @@ class YOLOv6(nn.Module):
 
         self.backbone, self.neck, self.detect = self.build_network()
 
-        # Init Detect head
+        # Init EfficientDecoupledHead head
         begin_indices = self.config.model.head.begin_indices
         out_indices_head = self.config.model.head.out_indices
         self.stride = self.detect.stride
@@ -83,7 +86,6 @@ class YOLOv6(nn.Module):
     # changed to isinstance checks
     def _initialize_weights(self) -> None:
         """Initialize model weights."""
-
         # initialize_weights(self) -> initialize_weights(self)
         for module in self.modules():
             if isinstance(module, nn.Conv2d):
@@ -156,12 +158,12 @@ class YOLOv6(nn.Module):
 
         return math.ceil(num / divisor) * divisor
 
-    def build_network(self) -> Tuple[EfficientRep, RepPANNeck, Detect]:
+    def build_network(self) -> Tuple[EfficientRep, RepPANNeck, EfficientDecoupledHead]:
         """Builds the network and returns the backbone, neck and head.
 
         Returns:
-            Tuple[EfficientRep, RepPANNeck, Detect]: Returns the backbone, neck
-            and head of YOLOv6.
+            Tuple[EfficientRep, RepPANNeck, EfficientDecoupledHead]: Returns the
+            backbone, neck and head of YOLOv6.
         """
         depth_mul = self.config.model.depth_multiple
         width_mul = self.config.model.width_multiple
@@ -179,24 +181,22 @@ class YOLOv6(nn.Module):
             for i in (channels_list_backbone + channels_list_neck)
         ]
 
-        block = get_block(self.config.training_mode)
-
         backbone = EfficientRep(
             in_channels=self.channels,
             channels_list=channels_list,
             num_repeats=num_repeat,
-            block=block,
+            block=RepVGGBlock,
         )
 
         neck = RepPANNeck(
-            channels_list=channels_list, num_repeats=num_repeat, block=block
+            channels_list=channels_list, num_repeats=num_repeat, block=RepVGGBlock
         )
 
-        head_layers = build_effidehead_layer(
+        head_layers = build_efficient_decoupled_head(
             channels_list, num_anchors, self.num_classes
         )
 
-        head = Detect(
+        head = EfficientDecoupledHead(
             self.num_classes, self.anchors, self.num_layers, head_layers=head_layers
         )
 

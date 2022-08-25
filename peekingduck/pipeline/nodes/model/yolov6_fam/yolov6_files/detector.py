@@ -32,7 +32,7 @@ import torch
 from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.configs.config import (
     ModelParams,
 )
-from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.data.data_augment import (
+from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.data_utils.data_augment import (
     letterbox,
 )
 from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.layers.common import (
@@ -86,7 +86,7 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         self.logger = logging.getLogger(__name__)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.model_params = ModelParams(model_type)  # type: ignore
+        self.model_params = ModelParams(model_type)
 
         self.max_detections = max_detections
         self.multi_label = multi_label
@@ -138,12 +138,12 @@ class Detector:  # pylint: disable=too-many-instance-attributes
             - An array of detection scores
         """
         # Store the original image size to normalize bbox later
-        original_image_shape = tuple(image.shape)
+        original_image_shape = image.shape
 
         # modify preprocess and removed scale
         preprocessed_image = self._preprocess(image)
 
-        preprocessed_image_shape = tuple(preprocessed_image.shape)  # without bs
+        preprocessed_image_shape = preprocessed_image.shape  # without bs
 
         preprocessed_image = preprocessed_image.unsqueeze(0).to(self.device)
         preprocessed_image = (
@@ -319,6 +319,15 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         preprocessed_image_shape: Tuple[int, ...],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Postprocess image after inference.
+
+        Args:
+            prediction (torch.Tensor): The prediction tensor.
+            original_image_shape (Tuple[int, ...]): The original image shape.
+            preprocessed_image_shape (Tuple[int, ...]): The preprocessed image shape.
+
+        Returns:
+            bboxes, classes, scores (Tuple[np.ndarray, np.ndarray, np.ndarray]):
+                The postprocessed bboxes, classes, scores.
 
         Reference:
             YOLOv6.yolov6.core.inferer's.
