@@ -12,6 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+- start function name with test_ to make pytest recognize it as a test.
+- @pytest.mark.mlmodel allows us to pytest -m "mlmodel" to run only tests that have the mlmodel tag.
+See https://madewithml.com/courses/mlops/testing/#markers
+- conftest.py: in https://docs.pytest.org/en/6.2.x/fixture.html's conftest.py section, it says
+that fixtures defined in conftest.py are shared across multiple files, and do not need to be
+imported as pytest automatically detects them.
+    - Other ref: https://stackoverflow.com/questions/34466027/in-pytest-what-is-the-use-of-conftest-
+    py-files
+- Bug on printing t1.jpg's bboxes for ground truth, the last two rows of the outputs are permuted,
+to debug it I tried to add print statements at every junction of the code where "output" is there,
+but cannot find out why beside very small diff in image tensors.
+    - UPDATE: checked with Yier and difference is due to cv2.imread vs cv2.VideoCapture.
+### QNS
+- Ask on the mock torch cuda
+"""
 
 from pathlib import Path
 from unittest import mock
@@ -29,22 +45,6 @@ from tests.conftest import PKD_DIR, get_groundtruth
 
 GT_RESULTS = get_groundtruth(Path(__file__).resolve())
 CONFIG_PATH = PKD_DIR / "configs" / "model" / "yolov6.yml"
-
-"""
-- start function name with test_ to make pytest recognize it as a test.
-- @pytest.mark.mlmodel allows us to pytest -m "mlmodel" to run only tests that have the mlmodel tag.
-See https://madewithml.com/courses/mlops/testing/#markers
-- conftest.py: in https://docs.pytest.org/en/6.2.x/fixture.html's conftest.py section, it says
-that fixtures defined in conftest.py are shared across multiple files, and do not need to be
-imported as pytest automatically detects them.
-    - Other ref: https://stackoverflow.com/questions/34466027/in-pytest-what-is-the-use-of-conftest-py-files
-- Bug on printing t1.jpg's bboxes for ground truth, the last two rows of the outputs are permuted,
-to debug it I tried to add print statements at every junction of the code where "output" is there,
-but cannot find out why beside very small diff in image tensors.
-    - UPDATE: checked with Yier and difference is due to cv2.imread vs cv2.VideoCapture.
-### QNS
-- Ask on the mock torch cuda
-"""
 
 
 @pytest.fixture(scope="function")
@@ -161,7 +161,6 @@ def test_yolov6_matrix_config(yolov6_matrix_config):
 
 def test_yolov6_config_cpu(yolov6_config_cpu):
     print(f"fixture for yolov6_config_cpu={yolov6_config_cpu}\n")
-
 
 
 # To make debug easier, I only restrict matrix to 1 combo of params.
