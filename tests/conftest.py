@@ -25,7 +25,7 @@ import pytest
 import tensorflow.keras.backend as K
 import yaml
 
-HUMAN_IMAGES = ["t1.jpg"]  # , "t2.jpg", "t4.jpg"]
+HUMAN_IMAGES = ["t1.jpg", "t2.jpg", "t4.jpg"]
 NO_HUMAN_IMAGES = ["black.jpg", "t3.jpg"]
 
 SINGLE_PERSON_IMAGES = ["t2.jpg"]

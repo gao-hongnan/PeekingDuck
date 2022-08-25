@@ -58,7 +58,6 @@ class EfficientRep(nn.Module):
     ):
         super().__init__()
 
-        # FIXME: since assert not None maybe change args to be not default None?
         assert channels_list is not None
         assert num_repeats is not None
 

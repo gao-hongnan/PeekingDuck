@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=all
 
 from pathlib import Path
 from unittest import mock
@@ -23,7 +22,7 @@ import numpy.testing as npt
 import pytest
 import torch
 import yaml
-from typing import *
+
 from peekingduck.pipeline.nodes.base import WeightsDownloaderMixin
 from peekingduck.pipeline.nodes.model.yolov6 import Node
 from tests.conftest import PKD_DIR, get_groundtruth
@@ -49,7 +48,7 @@ but cannot find out why beside very small diff in image tensors.
 
 
 @pytest.fixture(scope="function")
-def yolov6_config() -> Dict[str, Any]:
+def yolov6_config():
     """Fixture to load the config file for yolov6 node.
 
     Note:
@@ -71,9 +70,7 @@ def yolov6_config() -> Dict[str, Any]:
         {"key": "score_threshold", "value": 1.5},
     ],
 )
-def yolov6_bad_config_value(
-    request: Type["pytest.fixtures.SubRequest"], yolov6_config: Dict[str, Any]
-) -> Dict[str, Any]:
+def yolov6_bad_config_value(request, yolov6_config):
     """Fixture to load the config file with bad values for yolov6 node.
 
     Note:
@@ -115,9 +112,7 @@ def yolov6_bad_config_value(
         # {"agnostic_nms": False, "fuse": False, "half": False},
     ]
 )
-def yolov6_matrix_config(
-    request: Type["pytest.fixtures.SubRequest"], yolov6_config: Dict[str, Any]
-) -> Dict[str, Any]:
+def yolov6_matrix_config(request, yolov6_config):
     """Similar to yolov6_bad_config_value, this fixture loads different config
     targeting other configurations.
 
@@ -132,9 +127,7 @@ def yolov6_matrix_config(
 
 
 @pytest.fixture(params=["yolov6n", "yolov6t"])
-def yolov6_config_cpu(
-    request: Type["pytest.fixtures.SubRequest"], yolov6_matrix_config: Dict[str, Any]
-) -> Iterator[Dict[str, Any]]:
+def yolov6_config_cpu(request, yolov6_matrix_config):
     """Similar to the previous fixtures, this fixture mainly loads different model types.
 
     Note:
@@ -168,6 +161,7 @@ def test_yolov6_matrix_config(yolov6_matrix_config):
 
 def test_yolov6_config_cpu(yolov6_config_cpu):
     print(f"fixture for yolov6_config_cpu={yolov6_config_cpu}\n")
+
 
 
 # To make debug easier, I only restrict matrix to 1 combo of params.

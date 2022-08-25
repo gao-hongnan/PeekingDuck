@@ -31,9 +31,6 @@ from tests.conftest import PKD_DIR, get_groundtruth
 GT_RESULTS = get_groundtruth(Path(__file__).resolve())
 
 
-# print(GT_RESULTS)
-
-
 @pytest.fixture
 def yolox_config():
     with open(PKD_DIR / "configs" / "model" / "yolox.yml") as infile:

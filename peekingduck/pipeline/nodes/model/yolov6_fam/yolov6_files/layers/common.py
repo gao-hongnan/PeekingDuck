@@ -249,7 +249,6 @@ class RepVGGBlock(nn.Module):
 
         self.nonlinearity = nn.ReLU()
 
-        # FIXME: se is identity func
         self.se = nn.Identity()
 
         if deploy:

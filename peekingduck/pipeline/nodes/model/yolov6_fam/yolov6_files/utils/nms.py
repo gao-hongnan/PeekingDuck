@@ -37,23 +37,6 @@ np.set_printoptions(linewidth=320, formatter={"float_kind": "{:11.5g}".format})
 # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
 cv2.setNumThreads(0)  # add this to whitelist
 
-
-# # TODO: to use my own repo's central config way to call configs.
-# @dataclass(init=True, frozen=True)
-# class NMS:
-#     """NMS configs."""
-
-#     max_wh = 4096  # maximum box width and height
-#     max_nms = 30000  # maximum number of boxes put into torchvision.ops.nms()
-#     time_limit = 10.0  # quit the function when nms cost time exceed the limit time.
-#     score_threshold: float
-#     iou_thres: float
-#     detect: List[int]
-#     agnostic: bool
-#     multi_label: bool
-#     max_det: int
-
-
 # pylint: disable=too-many-arguments, too-many-locals
 def non_max_suppression(
     predictions: torch.Tensor,
