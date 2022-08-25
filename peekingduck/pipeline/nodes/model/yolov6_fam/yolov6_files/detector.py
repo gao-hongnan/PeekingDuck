@@ -86,7 +86,7 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         self.logger = logging.getLogger(__name__)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.model_params = ModelParams(model_type)
+        self.model_params = ModelParams(model_type)  # type: ignore
 
         self.max_detections = max_detections
         self.multi_label = multi_label
