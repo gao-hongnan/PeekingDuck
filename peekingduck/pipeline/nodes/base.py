@@ -46,6 +46,7 @@ import operator
 import os
 import re
 import sys
+from syslog import LOG_ALERT
 import zipfile
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Union, no_type_check, Tuple
@@ -56,8 +57,8 @@ from tqdm import tqdm
 
 
 BASE_URL = "https://storage.googleapis.com/peekingduck/models"
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.absolute()
-LOCAL_URL = Path.joinpath(BASE_DIR, "external_weights/peekingduck/models").as_uri()
+BASE_DIR = Path(__file__).resolve().parents[3].absolute()
+LOCAL_URL = (BASE_DIR / "external_weights" / "peekingduck" / "models").as_uri()
 
 PEEKINGDUCK_WEIGHTS_SUBDIR = "peekingduck_weights"
 
@@ -381,7 +382,6 @@ class WeightsDownloaderMixin:
             destination_dir (Path): Destination directory for extraction.
         """
         zip_path = destination_dir / self.blob_filename
-        print(zip_path)
         with zipfile.ZipFile(zip_path, "r") as infile:
             file_list = infile.namelist()
             for file in tqdm(file=sys.stdout, iterable=file_list, total=len(file_list)):

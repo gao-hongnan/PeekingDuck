@@ -13,5 +13,5 @@
 # limitations under the License.
 
 """
-Yolo-related files for yolo node
+YOLOv6 related files for YOLOv6 node.
 """

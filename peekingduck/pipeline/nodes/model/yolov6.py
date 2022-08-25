@@ -41,8 +41,8 @@ class Node(AbstractNode):  # pylint: disable=too-few-public-methods
         weights_parent_dir (:obj:`Optional[str]`): **default = null**. |br|
             Change the parent directory where weights will be stored by
             replacing ``null`` with an absolute path to the desired directory.
-        input_size (:obj:`int`): **default=416**. |br|
-            Input image resolution of the YOLOX model.
+        input_size (:obj:`int`): **default=640**. |br|
+            Input image resolution of the YOLOv6 model.
         detect (:obj:`List[Union[int, string]]`): **default=[0]**. |br|
             List of object class names or IDs to be detected. To detect all classes,
             refer to the :ref:`tech note <general-object-detection-ids>`.
@@ -59,7 +59,7 @@ class Node(AbstractNode):  # pylint: disable=too-few-public-methods
         half (:obj:`bool`): **default = False**. |br|
             Flag to determine if half-precision floating-point should be used
             for inference.
-        fuse (:obj:`bool`): **default = False**. |br|
+        fuse (:obj:`bool`): **default = True**. |br|
             Flag to determine if the convolution and batch normalization layers
             should be fused for inference.
         multi_label (:obj:`bool`): **default = True**. |br|
@@ -91,7 +91,6 @@ class Node(AbstractNode):  # pylint: disable=too-few-public-methods
             (Dict): Outputs dictionary with the keys `bboxes`, `bbox_labels`,
                 and `bbox_scores`.
         """
-        # print(inputs["img"])
         bboxes, labels, scores = self.model.predict(inputs["img"])
         bboxes = np.clip(bboxes, 0, 1)
 

@@ -13,5 +13,5 @@
 # limitations under the License.
 
 """
-Yolo utilities
+YOLOv6 utilities.
 """

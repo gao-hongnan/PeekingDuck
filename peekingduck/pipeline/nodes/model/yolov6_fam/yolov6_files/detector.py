@@ -29,27 +29,23 @@ from typing import Dict, List, Tuple
 import numpy as np
 import torch
 
-
-from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.models.yolo import YOLOv6
-from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.utils.torch_utils import (
-    fuse_model,
-)
-from peekingduck.pipeline.utils.bbox.transforms import xyxy2xyxyn
-
-
-from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.layers.common import (
-    RepVGGBlock,
+from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.configs.config import (
+    ModelParams,
 )
 from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.data.data_augment import (
     letterbox,
 )
+from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.layers.common import (
+    RepVGGBlock,
+)
+from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.models.yolo import YOLOv6
 from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.utils.nms import (
     non_max_suppression,
 )
-
-from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.configs.config import (
-    ModelParams,
+from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.utils.torch_utils import (
+    fuse_model,
 )
+from peekingduck.pipeline.utils.bbox.transforms import xyxy2xyxyn
 
 
 class Detector:  # pylint: disable=too-many-instance-attributes
@@ -90,7 +86,6 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         self.logger = logging.getLogger(__name__)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # hn
         self.model_params = ModelParams(model_type)  # type: ignore
 
         self.max_detections = max_detections
@@ -142,7 +137,6 @@ class Detector:  # pylint: disable=too-many-instance-attributes
             - An array of human-friendly detection class names
             - An array of detection scores
         """
-
         # Store the original image size to normalize bbox later
         original_image_shape = tuple(image.shape)
 
@@ -151,16 +145,11 @@ class Detector:  # pylint: disable=too-many-instance-attributes
 
         preprocessed_image_shape = tuple(preprocessed_image.shape)  # without bs
 
-        model_format = self.model_format
-        if model_format == "pytorch":
-            preprocessed_image = preprocessed_image.unsqueeze(0).to(self.device)
-            preprocessed_image = (
-                preprocessed_image.half() if self.half else preprocessed_image.float()
-            )
-            prediction = self.yolov6(preprocessed_image)
-
-        else:
-            self.logger.error(f"Unknown model format: {model_format}")
+        preprocessed_image = preprocessed_image.unsqueeze(0).to(self.device)
+        preprocessed_image = (
+            preprocessed_image.half() if self.half else preprocessed_image.float()
+        )
+        prediction = self.yolov6(preprocessed_image)
 
         # modified accordingly
         bboxes, classes, scores = self._postprocess(
@@ -220,7 +209,6 @@ class Detector:  # pylint: disable=too-many-instance-attributes
     @staticmethod
     def model_switch(model: YOLOv6) -> None:
         """Model switch to deploy status"""
-
         for layer in model.modules():
             if isinstance(layer, RepVGGBlock):
                 layer.switch_to_deploy()
@@ -234,19 +222,15 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         Raises:
             ValueError: `model_path` does not exist.
         """
-
         model_format = self.model_format
         if model_format == "pytorch":
             if self.model_path.is_file():
-
                 ckpt = torch.load(str(self.model_path), map_location=self.device)
-                model = self._get_model().to(self.device)
+                model = self._get_model().to(self.device).float()
                 model.load_state_dict(ckpt)
 
                 if self.half:
                     model.half()
-                else:
-                    model = model.float()
 
                 if self.fuse:
                     model = fuse_model(model)
@@ -290,7 +274,6 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         - preprocessed_image_shape: [448, 640]
         - We just want to rescale the bbox on the preprocessed image to original image.
         """
-
         preprocessed_image_shape = preprocessed_image_shape[1:]
         ratio = min(
             preprocessed_image_shape[0] / original_image_shape[0],
@@ -317,17 +300,17 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         Reference:
             YOLOv6.yolov6.core.inferer's `precess_image`.
         """
-
         image = letterbox(image, self.input_size, stride=self.stride)[0]
         # Convert
         image = image.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
 
-        # overwrite var mypy
-        image = torch.from_numpy(np.ascontiguousarray(image))  # type: ignore
-        image = image.half() if self.half else image.float()  # uint8 to fp16/32
-        image /= 255  # 0 - 255 to 0.0 - 1.0
+        # Numpy to Tensor
+        image_tensor = torch.from_numpy(np.ascontiguousarray(image))
+        # uint8 to fp16/32
+        image_tensor = image_tensor.half() if self.half else image_tensor.float()
+        image_tensor /= 255  # 0 - 255 to 0.0 - 1.0
 
-        return image  # type: ignore
+        return image_tensor
 
     def _postprocess(
         self,
@@ -338,9 +321,8 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         """Postprocess image after inference.
 
         Reference:
-            YOLOv6.yolov6.core.inferer
+            YOLOv6.yolov6.core.inferer's.
         """
-
         det = non_max_suppression(
             prediction,
             self.score_threshold,
