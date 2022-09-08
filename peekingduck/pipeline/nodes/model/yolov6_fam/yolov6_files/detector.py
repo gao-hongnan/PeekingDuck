@@ -61,10 +61,6 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         yolov6 (YOLOv6): The YOLOv6 model for performing inference.
     """
 
-    # this is congruence to yolov6's config model params
-    model_params: type[ModelParams]
-    stride: int
-
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         model_dir: Path,
@@ -86,7 +82,7 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         self.logger = logging.getLogger(__name__)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.model_params = ModelParams(model_type)  # type: ignore
+        self.model_params: type[ModelParams] = ModelParams(model_type)  # type: ignore
 
         self.max_detections = max_detections
         self.multi_label = multi_label
@@ -113,7 +109,7 @@ class Detector:  # pylint: disable=too-many-instance-attributes
 
         # 1. need to see DetectBackend to change the code below;
         # 2. define it under init to pass type checks.
-        self.stride = int(self.yolov6.stride.max())
+        self.stride: int = int(self.yolov6.stride.max())
 
     @torch.no_grad()
     def predict_object_bbox_from_image(
@@ -222,35 +218,31 @@ class Detector:  # pylint: disable=too-many-instance-attributes
         Raises:
             ValueError: `model_path` does not exist.
         """
-        model_format = self.model_format
-        if model_format == "pytorch":
-            if self.model_path.is_file():
-                ckpt = torch.load(str(self.model_path), map_location=self.device)
-                model = self._get_model().to(self.device).float()
-                model.load_state_dict(ckpt)
+        if self.model_path.is_file():
+            ckpt = torch.load(str(self.model_path), map_location=self.device)
+            model = self._get_model().to(self.device).float()
+            model.load_state_dict(ckpt)
 
-                if self.half:
-                    model.half()
+            if self.half:
+                model.half()
 
-                if self.fuse:
-                    model = fuse_model(model)
+            if self.fuse:
+                model = fuse_model(model)
 
-                if self.device.type != "cpu":
-                    # remove model.model because our model is not DetectBackend
-                    model(
-                        torch.zeros(1, 3, *self.input_size)
-                        .to(self.device)
-                        .type_as(next(model.parameters()))
-                    )  # warmup
+            if self.device.type != "cpu":
+                # remove model.model because our model is not DetectBackend
+                model(
+                    torch.zeros(1, 3, *self.input_size)
+                    .to(self.device)
+                    .type_as(next(model.parameters()))
+                )  # warmup
 
-                # switch model to deploy status
-                self.model_switch(model)
+            # switch model to deploy status
+            self.model_switch(model)
 
-                model.eval()
+            model.eval()
 
-                return model
-        else:
-            self.logger.error(f"Unknown model format: {model_format}")
+            return model
 
         raise ValueError(
             f"Model file does not exist. Please check that {self.model_path} exists."

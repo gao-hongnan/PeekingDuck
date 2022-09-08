@@ -114,21 +114,21 @@ class EfficientDecoupledHead(nn.Module):
             obj_output = self.obj_preds[i](reg_feat)
 
             y = torch.cat([reg_output, obj_output.sigmoid(), cls_output.sigmoid()], 1)
-            batch_size, _, ny, nx = y.shape
-            print(f"y.shape: {y.shape}")
+            batch_size, _, hsize, wsize = y.shape
+
             y = (
-                y.view(batch_size, self.num_anchors, self.num_outputs, ny, nx)
+                y.view(batch_size, self.num_anchors, self.num_outputs, hsize, wsize)
                 .permute(0, 1, 3, 4, 2)
                 .contiguous()
             )
             if self.grid[i].shape[2:4] != y.shape[2:4]:
                 d = self.stride.device
                 yv, xv = torch.meshgrid(
-                    [torch.arange(ny).to(d), torch.arange(nx).to(d)]
+                    [torch.arange(hsize).to(d), torch.arange(wsize).to(d)]
                 )
                 self.grid[i] = (
                     torch.stack((xv, yv), 2)
-                    .view(1, self.num_anchors, ny, nx, 2)
+                    .view(1, self.num_anchors, hsize, wsize, 2)
                     .float()
                 )
             # inplace=True

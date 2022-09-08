@@ -95,5 +95,4 @@ class Node(AbstractNode):  # pylint: disable=too-few-public-methods
         bboxes = np.clip(bboxes, 0, 1)
 
         outputs = {"bboxes": bboxes, "bbox_labels": labels, "bbox_scores": scores}
-        print(f"output from yolov6.py:{outputs}")
         return outputs

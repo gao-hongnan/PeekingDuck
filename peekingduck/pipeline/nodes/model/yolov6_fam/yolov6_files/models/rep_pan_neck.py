@@ -41,7 +41,6 @@ class RepPANNeck(nn.Module):
         self,
         channels_list: Optional[List[int]] = None,
         num_repeats: Optional[List[int]] = None,
-        block: type[RepVGGBlock] = RepVGGBlock,
     ):
         super().__init__()
 
@@ -53,28 +52,28 @@ class RepPANNeck(nn.Module):
             in_channels=channels_list[3] + channels_list[5],
             out_channels=channels_list[5],
             n=num_repeats[5],
-            block=block,
+            block=RepVGGBlock,
         )
 
         self.Rep_p3 = RepBlock(
             in_channels=channels_list[2] + channels_list[6],
             out_channels=channels_list[6],
             n=num_repeats[6],
-            block=block,
+            block=RepVGGBlock,
         )
 
         self.Rep_n3 = RepBlock(
             in_channels=channels_list[6] + channels_list[7],
             out_channels=channels_list[8],
             n=num_repeats[7],
-            block=block,
+            block=RepVGGBlock,
         )
 
         self.Rep_n4 = RepBlock(
             in_channels=channels_list[5] + channels_list[9],
             out_channels=channels_list[10],
             n=num_repeats[8],
-            block=block,
+            block=RepVGGBlock,
         )
 
         self.reduce_layer0 = SimConv(

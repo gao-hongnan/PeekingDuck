@@ -54,14 +54,13 @@ class EfficientRep(nn.Module):
         in_channels: int = 3,
         channels_list: Optional[List[int]] = None,
         num_repeats: Optional[List[int]] = None,
-        block: type[RepVGGBlock] = RepVGGBlock,
-    ):
+    ) -> None:
         super().__init__()
 
         assert channels_list is not None
         assert num_repeats is not None
 
-        self.stem = block(
+        self.stem = RepVGGBlock(
             in_channels=in_channels,
             out_channels=channels_list[0],
             kernel_size=3,
@@ -70,7 +69,7 @@ class EfficientRep(nn.Module):
 
         # pylint: disable=invalid-name
         self.ERBlock_2 = nn.Sequential(
-            block(
+            RepVGGBlock(
                 in_channels=channels_list[0],
                 out_channels=channels_list[1],
                 kernel_size=3,
@@ -80,12 +79,12 @@ class EfficientRep(nn.Module):
                 in_channels=channels_list[1],
                 out_channels=channels_list[1],
                 n=num_repeats[1],
-                block=block,
+                block=RepVGGBlock,
             ),
         )
 
         self.ERBlock_3 = nn.Sequential(
-            block(
+            RepVGGBlock(
                 in_channels=channels_list[1],
                 out_channels=channels_list[2],
                 kernel_size=3,
@@ -95,12 +94,12 @@ class EfficientRep(nn.Module):
                 in_channels=channels_list[2],
                 out_channels=channels_list[2],
                 n=num_repeats[2],
-                block=block,
+                block=RepVGGBlock,
             ),
         )
 
         self.ERBlock_4 = nn.Sequential(
-            block(
+            RepVGGBlock(
                 in_channels=channels_list[2],
                 out_channels=channels_list[3],
                 kernel_size=3,
@@ -110,12 +109,12 @@ class EfficientRep(nn.Module):
                 in_channels=channels_list[3],
                 out_channels=channels_list[3],
                 n=num_repeats[3],
-                block=block,
+                block=RepVGGBlock,
             ),
         )
 
         self.ERBlock_5 = nn.Sequential(
-            block(
+            RepVGGBlock(
                 in_channels=channels_list[3],
                 out_channels=channels_list[4],
                 kernel_size=3,
@@ -125,7 +124,7 @@ class EfficientRep(nn.Module):
                 in_channels=channels_list[4],
                 out_channels=channels_list[4],
                 n=num_repeats[4],
-                block=block,
+                block=RepVGGBlock,
             ),
             SimSPPF(
                 in_channels=channels_list[4],

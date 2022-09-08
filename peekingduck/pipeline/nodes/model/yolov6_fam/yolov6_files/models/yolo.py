@@ -185,12 +185,9 @@ class YOLOv6(nn.Module):
             in_channels=self.channels,
             channels_list=channels_list,
             num_repeats=num_repeat,
-            block=RepVGGBlock,
         )
 
-        neck = RepPANNeck(
-            channels_list=channels_list, num_repeats=num_repeat, block=RepVGGBlock
-        )
+        neck = RepPANNeck(channels_list=channels_list, num_repeats=num_repeat)
 
         head_layers = build_efficient_decoupled_head(
             channels_list, num_anchors, self.num_classes
