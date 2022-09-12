@@ -40,7 +40,7 @@ def jde_config():
     """Yields config while forcing the model to run on CPU."""
     with open(PKD_DIR / "configs" / "model" / "jde.yml") as infile:
         node_config = yaml.safe_load(infile)
-    node_config["root"] = Path.cwd()
+    node_config["root"] = PKD_DIR
 
     with mock.patch("torch.cuda.is_available", return_value=False):
         yield node_config
@@ -53,7 +53,7 @@ def jde_config_gpu():
     """
     with open(PKD_DIR / "configs" / "model" / "jde.yml") as infile:
         node_config = yaml.safe_load(infile)
-    node_config["root"] = Path.cwd()
+    node_config["root"] = PKD_DIR
 
     yield node_config
 
@@ -97,9 +97,9 @@ class TestJDE:
         jde = Node(jde_config)
         output = jde.run({"img": no_human_img})
         expected_output = {
-            "bboxes": [],
-            "bbox_labels": [],
-            "bbox_scores": [],
+            "bboxes": np.empty((0, 4)),
+            "bbox_labels": np.empty(0),
+            "bbox_scores": np.empty(0),
             "obj_attrs": {"ids": []},
         }
         assert output.keys() == expected_output.keys()
