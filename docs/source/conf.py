@@ -94,6 +94,6 @@ autosummary_mock_imports = [
     "model.yolov4",
     "model.yolov4_face",
     "model.yolov4_license_plate",
-    "model.yoloxv1",
+    "model.yolov6" "model.yoloxv1",
     "output.utils",
 ]
