@@ -42,9 +42,6 @@ from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.models.efficient_d
 from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.models.rep_pan_neck import (
     RepPANNeck,
 )
-from peekingduck.pipeline.nodes.model.yolov6_fam.yolov6_files.layers.common import (
-    RepVGGBlock,
-)
 
 
 class YOLOv6(nn.Module):
@@ -95,7 +92,8 @@ class YOLOv6(nn.Module):
                 module.momentum = 0.03
 
             elif isinstance(
-                module, (nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.Hardswish, nn.SiLU)
+                module,
+                (nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.Hardswish, nn.SiLU),
             ):
                 module.inplace = True
 
@@ -158,7 +156,9 @@ class YOLOv6(nn.Module):
 
         return math.ceil(num / divisor) * divisor
 
-    def build_network(self) -> Tuple[EfficientRep, RepPANNeck, EfficientDecoupledHead]:
+    def build_network(
+        self,
+    ) -> Tuple[EfficientRep, RepPANNeck, EfficientDecoupledHead]:
         """Builds the network and returns the backbone, neck and head.
 
         Returns:
@@ -194,7 +194,10 @@ class YOLOv6(nn.Module):
         )
 
         head = EfficientDecoupledHead(
-            self.num_classes, self.anchors, self.num_layers, head_layers=head_layers
+            self.num_classes,
+            self.anchors,
+            self.num_layers,
+            head_layers=head_layers,
         )
 
         return backbone, neck, head
