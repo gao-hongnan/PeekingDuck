@@ -3,15 +3,30 @@ from pathlib import Path
 
 
 # path names to MoveNet and YOLOX TensorRT files
-MOVENET_MPL = "movenet_tensorrt/multipose_lightning_fp16"
-MOVENET_SPL = "movenet_tensorrt/singlepose_lightning_fp16"
-MOVENET_SPT = "movenet_tensorrt/singlepose_thunder_fp16"
-YOLOX_TINY = "yolox_tensorrt/yolox-tiny.trt"
-YOLOX_S = "yolox_tensorrt/yolox-s.trt"
-YOLOX_M = "yolox_tensorrt/yolox-m.trt"
-YOLOX_L = "yolox_tensorrt/yolox-l.trt"
+# MOVENET_MPL = "movenet_tensorrt/multipose_lightning_fp16"
+# MOVENET_SPL = "movenet_tensorrt/singlepose_lightning_fp16"
+# MOVENET_SPT = "movenet_tensorrt/singlepose_thunder_fp16"
+# YOLOX_TINY = "yolox_tensorrt/yolox-tiny.trt"
+# YOLOX_S = "yolox_tensorrt/yolox-s.trt"
+# YOLOX_M = "yolox_tensorrt/yolox-m.trt"
+# YOLOX_L = "yolox_tensorrt/yolox-l.trt"
 
-MODELS = [MOVENET_MPL, MOVENET_SPL, MOVENET_SPT, YOLOX_TINY, YOLOX_S, YOLOX_M, YOLOX_L]
+YOLOV6_N = "/Users/reighns/gaohn/gaohn_pkd/PeekingDuck/external_weights/peekingduck/models/yolov6/pytorch/new_yolov6n.pt"
+YOLOV6_S = "/Users/reighns/gaohn/gaohn_pkd/PeekingDuck/external_weights/peekingduck/models/yolov6/pytorch/new_yolov6s.pt"
+YOLOV6_T = "/Users/reighns/gaohn/gaohn_pkd/PeekingDuck/external_weights/peekingduck/models/yolov6/pytorch/new_yolov6t.pt"
+
+MODELS = [
+    # MOVENET_MPL,
+    # MOVENET_SPL,
+    # MOVENET_SPT,
+    # YOLOX_TINY,
+    # YOLOX_S,
+    # YOLOX_M,
+    # YOLOX_L,
+    YOLOV6_N,
+    YOLOV6_S,
+    YOLOV6_T,
+]
 
 
 def sha256sum(path: Path, hash_func: "hashlib._Hash" = None) -> "hashlib._Hash":

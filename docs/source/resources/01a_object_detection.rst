@@ -15,6 +15,8 @@ The table below shows the object detection models available for each task catego
 |               | YOLOv4                 | :mod:`model.yolo`               |
 +               +------------------------+---------------------------------+
 | General       | YOLOX                  | :mod:`model.yolox`              |
++               +------------------------+---------------------------------+
+|               | YOLOv6                 | :mod:`model.yolov6`             |
 +---------------+------------------------+---------------------------------+
 |               | MTCNN                  | :mod:`model.mtcnn`              |
 +               +------------------------+---------------------------------+

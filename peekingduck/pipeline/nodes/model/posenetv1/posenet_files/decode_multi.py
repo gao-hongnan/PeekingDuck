@@ -162,8 +162,9 @@ def _look_for_poses(
     pose_count = 0
     dst_keypoint_scores[:] = 0
     max_pose_detections = dst_keypoint_scores.shape[0]
+    # fmt: off
     squared_nms_radius = nms_radius ** 2
-
+    # fmt: on
     for root_score, root_id, root_coord in scored_parts:
         root_image_coords = _calculate_keypoint_coords_on_image(
             root_coord, output_stride, offsets, root_id
