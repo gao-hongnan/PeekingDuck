@@ -1,0 +1,20 @@
+input: ["img"]
+output: ["pred_label", "pred_score"] #, "gradcam_image"]
+
+weights_parent_dir: null
+
+class_label_map: {
+    0: "ok",
+    1: "defective",
+}
+
+in_channels: 3
+pretrained: true
+model_name: resnet18
+num_classes: 2
+
+checkpoint_path: C:\Users\gaohn\gao_hongnan\PeekingDuck\castings\epoch=4-step=160.ckpt
+
+# augmentation
+augmentation:
+  {image_size: 224, mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
