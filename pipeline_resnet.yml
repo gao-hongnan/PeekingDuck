@@ -1,8 +1,11 @@
 nodes:
 - input.visual:
     source: castings/test
-- model.resnet18
+- model.resnet18:
+   plot_gradcam: False 
 - output.csv_writer:
    stats_to_track: ["filename", "pred_label", "pred_score"]
    file_path: casting_predictions.csv
    logging_interval: 0
+- output.screen
+

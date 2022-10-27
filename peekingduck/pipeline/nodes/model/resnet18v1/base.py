@@ -69,6 +69,9 @@ class TorchVision(nn.Module, ABC):
         self.model = self.create_model()
         # self._init_weights(self.model)
 
+    def model_summary(self):
+        """torchsummary wrapper"""
+
     def load_backbone(self):
         """Loads a pretrained model from torchvision.models.
 

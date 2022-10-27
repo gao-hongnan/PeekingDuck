@@ -13,7 +13,10 @@ pretrained: true
 model_name: resnet18
 num_classes: 2
 
-checkpoint_path: C:\Users\gaohn\gao_hongnan\PeekingDuck\castings\epoch=4-step=160.ckpt
+plot_gradcam: true
+
+# checkpoint_path: C:\Users\gaohn\gao_hongnan\PeekingDuck\castings\epoch=4-step=160.ckpt
+checkpoint_path: /Users/reighns/gaohn/gaohn_pkd/PeekingDuck/castings/epoch=4-step=160.ckpt
 
 # augmentation
 augmentation:

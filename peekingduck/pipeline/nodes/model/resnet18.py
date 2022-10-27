@@ -4,6 +4,7 @@ Casting classification model.
 
 import os
 import random
+from tabnanny import check
 from typing import Any, Dict, Union
 
 import albumentations
@@ -27,6 +28,8 @@ from torchmetrics.functional import accuracy
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 import matplotlib.pyplot as plt
+from collections import OrderedDict
+import pandas as pd
 
 # pylint: disable=W0223
 
@@ -37,10 +40,6 @@ STD = [0.229, 0.224, 0.225]
 
 def create_model():
     model = torchvision.models.resnet18(pretrained=True, num_classes=1000)
-    # model.conv1 = nn.Conv2d(
-    #     3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
-    # )
-    # model.maxpool = nn.Identity()
     num_ftrs = model.fc.in_features
     # Here the size of each output sample is set to 2.
     # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
@@ -116,7 +115,13 @@ class Node(AbstractNode):
     def __init__(self, config: Dict[str, Any] = None, **kwargs: Any) -> None:
         super().__init__(config, node_path=__name__, **kwargs)
 
+        self.plot_gradcam: bool
+
         self.num_classes: int
+        self.checkpoint: str  # path to checkpoint for custom weights
+        self.pretrained: bool = (
+            config["pretrained"] or not self.checkpoint
+        )  # False or not False = True, handles where checkpoint is provided, then pretrained is set to False to reduce overhead load
 
         self.class_label_map = config["class_label_map"]
 
@@ -125,22 +130,63 @@ class Node(AbstractNode):
         self.std = config["augmentation"]["std"]
         self.transforms = self._get_transforms()
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = self._init_device()
 
-        # self.model = TorchVision(config).model.to(self.device)
-        self.model = LitResnet(lr=0.001).to(self.device)
+        self.model = TorchVision(config).model.to(self.device)
+
+        # self.model = LitResnet(lr=0.001).to(self.device)
         # self.model = self._create_model()
         # print(self.model.state_dict().keys())
         self.model.eval()
         self._load_checkpoint(config["checkpoint_path"])
 
+        # TODO: logger or torchsummary to show model architecture
+
+    def _is_model(self):
+        """Check if model name is valid."""
+        # implement this and raise RuntimeError if model name is invalid
+        pass
+
+    def lightning_to_torch_dicts(self, model_dict):
+
+        new_dict = OrderedDict()
+
+        for k, v in model_dict.items():
+            if "model." in k:
+                k = k.replace("model.", "")
+            new_dict[k] = v
+        return new_dict
+
+    def _init_device(self) -> torch.device:
+        """Copy from Yier's HF code.
+
+        May not need for our use case, but keeping for now.
+        """
+        device = torch.device(
+            self.config["device"] if torch.cuda.is_available() else "cpu"
+        )
+
+        return device
+
+    def _create_loader(self):
+        """Creates a PyTorch DataLoader for the dataset."""
+        # implement this and return a DataLoader
+        # FIXME: for now we use 1 batch size with input.visual, this should
+        # be considered in major refactoring to accept batch size
+        # ref: see yolo repo and timm etc.
+        pass
+
     def _create_model(self):
+        # TorchVisionHub
         model = torchvision.models.resnet18(pretrained=True, num_classes=1000)
 
         num_in_features = model.fc.in_features
         num_out_features = self.num_classes
         model.fc = nn.Linear(num_in_features, num_out_features)
         return model
+
+    def _load_state_dict_from_url(self):
+        """"""
 
     def _load_checkpoint(self, checkpoint_path: str) -> None:
         """Loads the model checkpoint.
@@ -149,10 +195,13 @@ class Node(AbstractNode):
             checkpoint_path (str): Path to the model checkpoint.
         """
         checkpoint = torch.load(checkpoint_path, map_location=self.device)
-        self.model.load_state_dict(checkpoint["state_dict"])
+        state_dict = checkpoint["state_dict"]
+        state_dict = self.lightning_to_torch_dicts(state_dict)
+        self.model.load_state_dict(state_dict)
 
     def _get_transforms(self):
         # can put tta #TODO put abstract method?
+        # also compare this with torch transforms
         return albumentations.Compose(
             [
                 albumentations.Resize(
@@ -171,17 +220,43 @@ class Node(AbstractNode):
 
     @torch.inference_mode(mode=True)
     def predict(self, image: np.ndarray) -> Dict[str, Any]:
+        # FIXME: here will be different if we use albu vs transforms
+        # so think of a way to abstract this (consider my old code?)
+        # __call__ method
+        # Note by construction of ToTensorV2, this np array will be converted to torch
+
         image = self.transforms(image=image)["image"].to(self.device)
 
-        if len(image.shape) != 4:
-            image = image.unsqueeze(0)  # np.expand_dims(image, 0)
+        # this is because by input visual (?) the outer dim is removed so no batch size.
+        # we need to add it back to make it a batch of 1 for model to do inference (by definition)
+        # made explicit to note that we are adding batch dim
+        image = image.unsqueeze(0) if len(image.shape) != 4 else image
 
         logits = self.model(image)  # model.forward(image)
         # only 1 image per inference take 0 index.
+        # FIXME: softmax vs sigmoid depends on model
         probs = getattr(torch.nn, "Softmax")(dim=1)(logits).cpu().numpy()[0]
         pred_score = probs.max() * 100
         class_name = self.class_label_map[np.argmax(probs)]
         return {"pred_label": class_name, "pred_score": pred_score}
+
+    def _get_model_artifacts(self) -> Dict[str, Any]:
+        """Returns the model artifacts from MLOps directory"""
+
+    def _tta(self):
+        """TTA"""
+
+    def _ensemble_hill_climb(self):
+        """Ensemble Hill Climb, can include voting etc"""
+
+    def _get_oof(self):
+        """Get OOF predictions. Typically done during training of KFolds. Placeholder
+        This can be important for ensemble models!!! A lot of winning solutions are
+        based on this statistical technique.
+        """
+
+    def _get_pseudo_labels(self):
+        """Get for unlabelled data."""
 
     def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Reads the image input and returns the predicted class label and probability.
@@ -190,14 +265,14 @@ class Node(AbstractNode):
         Returns:
               outputs (dict): Dictionary with keys "pred_label", "pred_score" and "gradcam_image".
         """
-
+        # this line usually goes in dataset class but for now keep here.
         img = cv2.cvtColor(inputs["img"], cv2.COLOR_BGR2RGB)
 
         reshaped_original_image = cv2.resize(img, (self.image_size, self.image_size))
         prediction_dict = self.predict(img)
 
         gradcam_image = self.show_resnet_gradcam(
-            self.model, img, reshaped_original_image, True
+            self.model, img, reshaped_original_image, self.plot_gradcam
         )
 
         return {
@@ -223,7 +298,8 @@ class Node(AbstractNode):
         """
         # model = self.resnet50d
         # only for resnet variants! for simplicity we don't enumerate other models!
-        target_layers = [model.model.layer4[-1]]  # [model.backbone.layer4[-1]]
+        # target_layers = [model.model.layer4[-1]]  # [model.backbone.layer4[-1]]
+        target_layers = [model.layer4[-1]]
         reshape_transform = None
 
         # input is np array so turn to tensor as well as resize aand as well as turn to tensor by totensorv2
