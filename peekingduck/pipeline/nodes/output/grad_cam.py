@@ -63,33 +63,33 @@ class Node(AbstractNode):
         super().__init__(config, node_path=__name__, **kwargs)
         self.first_run = True
 
+    # TODO: https://stackoverflow.com/questions/34966541/how-can-one-display-an-image-using-cv2-in-python
+
     def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Show the outputs on your display"""
         img = inputs["img"]
+        gradcam_img = inputs["gradcam_image"]
+        img = cv2.resize(img, gradcam_img.shape[1::-1])
+        print(img.shape, gradcam_img.shape)
+        concat_horizontal = cv2.hconcat([img, gradcam_img])
+        print(concat_horizontal.shape)
         if self.window_size["do_resizing"]:
-            img = cv2.resize(
-                img, (self.window_size["height"], self.window_size["width"])
+            concat_horizontal = cv2.resize(
+                concat_horizontal,
+                (self.window_size["height"], self.window_size["width"]),
             )
 
-        cv2.imshow(self.window_name, img)
-        if self.first_run:
-            cv2.moveWindow(self.window_name, self.window_loc["x"], self.window_loc["y"])
-            self.first_run = False
+        cv2.imshow(self.window_name, concat_horizontal)
+        cv2.waitKey(0)
+        # cv2.imshow(self.window_name, gradcam_img)
+        # if self.first_run:
+        #     cv2.moveWindow(self.window_name, self.window_loc["x"], self.window_loc["y"])
+        #     self.first_run = False
         if cv2.waitKey(1) & 0xFF == ord("q"):
             cv2.destroyWindow(self.window_name)
             return {"pipeline_end": True}
 
         return {"pipeline_end": False}
 
-    def _get_config_types(self) -> Dict[str, Any]:
-        """Returns dictionary mapping the node's config keys to respective types."""
-        return {
-            "window_name": str,
-            "window_loc": Dict[str, int],
-            "window_loc.x": int,
-            "window_loc.y": int,
-            "window_size": Dict[str, Union[bool, int]],
-            "window_size.do_resizing": bool,
-            "window_size.width": int,
-            "window_size.height": int,
-        }
+    # def _get_config_types(self) -> Dict[str, Any]:
+    #     """Returns dictionary mapping the node's config keys to respective types."""

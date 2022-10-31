@@ -1,5 +1,5 @@
 input: ["img"]
-output: ["pred_label", "pred_score"] #, "gradcam_image"]
+output: ["pred_label", "pred_score", "gradcam_image"]
 
 weights_parent_dir: null
 
@@ -15,8 +15,8 @@ num_classes: 2
 
 plot_gradcam: true
 
-# checkpoint_path: C:\Users\gaohn\gao_hongnan\PeekingDuck\castings\epoch=4-step=160.ckpt
-checkpoint_path: /Users/reighns/gaohn/gaohn_pkd/PeekingDuck/castings/epoch=4-step=160.ckpt
+checkpoint_path: C:\Users\gaohn\gao_hongnan\PeekingDuck\castings\epoch=9-step=320.ckpt
+#checkpoint_path: /Users/reighns/gaohn/gaohn_pkd/PeekingDuck/castings/epoch=4-step=160.ckpt
 
 # augmentation
 augmentation:

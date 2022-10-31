@@ -277,7 +277,7 @@ class Node(AbstractNode):
 
         return {
             **prediction_dict,
-            # "gradcam_image": gradcam_image,
+            "gradcam_image": gradcam_image,
         }
 
     def show_resnet_gradcam(
