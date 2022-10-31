@@ -7,6 +7,11 @@ nodes:
    stats_to_track: ["filename", "pred_label", "pred_score"]
    file_path: casting_predictions.csv
    logging_interval: 0
-- output.grad_cam
+- output.grad_cam:
+   window_size: {
+       do_resizing: False,
+       width: 448,
+       height: 448 
+   }
 #- output.screen
 
