@@ -18,20 +18,48 @@ import logging
 
 import click
 
+from peekingduck.commands import LOGGER_NAME
+from peekingduck.commands.base import AliasedGroup
 from peekingduck.commands.model_hub import model_hub
-from peekingduck.pipeline.nodes.model.mediapipe_hubv1.api_doc import SUPPORTED_TASKS
+from peekingduck.nodes.model.mediapipe_hubv1.api_doc import SUPPORTED_TASKS
 
-logger = logging.getLogger("peekingduck.cli")  # pylint: disable=invalid-name
+logger = logging.getLogger(LOGGER_NAME)  # pylint: disable=invalid-name
+
+subtask_option = click.option(
+    "-s", "--subtask", help="Computer vision subtask, e.g., face, body.", required=True
+)
 
 
-@model_hub.group()
+@model_hub.command(cls=AliasedGroup, aliases=["mp"])
 def mediapipe() -> None:
-    """Utility commands for MediaPipe models."""
+    """MediaPipe Solutions models."""
 
 
-@mediapipe.command()
-@click.option("--task", help="Computer vision task, e.g., object detection")
-@click.option("--subtask", help="Computer vision subtask, e.g., face")
+@mediapipe.command(
+    aliases=["keypoint", "kf"],
+    short_help=(
+        "Lists the supported keypoint formats for the specified pose "
+        "estimation `subtask`."
+    ),
+)
+@subtask_option
+def keypoint_formats(subtask: str) -> None:
+    """Lists the supported keypoint formats for the specified pose estimation `subtask`."""
+    print(f"Supported keypoint formats for 'pose estimation/{subtask}'")
+    for keypoint_format, docstring in SUPPORTED_TASKS.get_keypoint_format_cards(
+        _unprettify(subtask)
+    ).items():
+        print(f"{keypoint_format}: {docstring}")
+
+
+@mediapipe.command(
+    aliases=["model", "mt"],
+    short_help="Lists the supported model types for the specified `task` and `subtask`.",
+)
+@click.option(
+    "-t", "--task", help="Computer vision task, e.g., object detection", required=True
+)
+@subtask_option
 def model_types(task: str, subtask: str) -> None:
     """Lists the supported model types for the specified `task` and `subtask`."""
     print(f"Supported model types for '{task}/{subtask}'")
@@ -41,7 +69,7 @@ def model_types(task: str, subtask: str) -> None:
         print(f"{model_type}: {docstring}")
 
 
-@mediapipe.command()
+@mediapipe.command(aliases=["t"])
 def tasks() -> None:
     """Lists the supported computer vision tasks."""
     print("Supported computer vision tasks and respective subtasks:")

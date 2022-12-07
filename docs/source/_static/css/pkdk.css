@@ -41,6 +41,11 @@ dt.sig {
   white-space: normal;
 }
 
+.wy-table-responsive table.longtable td code,
+.wy-table-responsive table.longtable th code {
+  white-space: nowrap;
+}
+
 div.deprecated,
 div.versionchanged {
   margin-top: 0.5rem;
@@ -131,6 +136,19 @@ div.highlight span.pkd-raw-terminal:before {
 }
 #quickstart-mac:not(:checked) ~ * [data-os="mac"] {
   display: none;
+}
+
+/*****************************************************************************
+ * Color palette
+ * Adapted from "Installation quickstart"
+ *****************************************************************************/
+/* Show hidden content when the checkbox is checked */
+#sort-by-hue:checked ~ * [data-sort="hue"] {
+  display: block;
+}
+
+#sort-by-name:checked ~ * [data-sort="name"] {
+  display: block;
 }
 
 /* Colors */
